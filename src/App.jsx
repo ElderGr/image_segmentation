@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
+import { v4 as uuid } from 'uuid'
 
 function App() {
   const [parts, setParts] = useState([]);
@@ -16,19 +17,16 @@ function App() {
   }, [])
 
   useEffect(() => {
-    parts.forEach(() => handleDrawPart())
+    handleRenderCanvas((ctx) => parts.forEach((part) => handleDrawPart(ctx, part))) 
   }, [parts])
 
-  const handleDrawPart = () => {
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext("2d")
-
+  const handleDrawPart = (ctx, part) => {
     ctx.beginPath();
-    ctx.arc(mousePos.x, mousePos.y, 40, 0, 2 * Math.PI);
+    ctx.arc(part.x, part.y, 40, 0, 2 * Math.PI);
     ctx.stroke();
   }
 
-  const handleRenderCanvas = () => {
+  const handleRenderCanvas = (toDraw) => {
     if(canvasRef.current){
       const canvas = canvasRef.current
       const ctx = canvas.getContext("2d")
@@ -41,6 +39,9 @@ function App() {
 
       img.onload = () => {
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        if(toDraw){
+          toDraw(ctx)
+        }
       }
     }
   } 
@@ -58,10 +59,16 @@ function App() {
 
   function fixPosition(){
     const currentPos = {
+      id: uuid(),
       x: mousePos.x, 
       y: mousePos.y
     }
     setParts([...parts, currentPos])
+  }
+
+  function handleRemoveSegmentation(part){
+    const clonePart = parts.filter(p => p.id !== part.id)
+    setParts(clonePart)
   }
   
   return (
@@ -94,7 +101,7 @@ function App() {
               <input/>
             </div>
             <div>
-              <button>Lixo</button>
+              <button type='button' onClick={() => handleRemoveSegmentation(part)}>Lixo</button>
             </div>
           </div>
         ))}

@@ -8,6 +8,11 @@ export default class SceneInit {
     this.scene = undefined;
     this.camera = undefined;
     this.renderer = undefined;
+    this.raycaster = undefined;
+    this.mouse = undefined;
+    this.instersectionPoint = undefined;
+    this.planeNormal = undefined;
+    this.plane = undefined;
 
     // NOTE: Camera params;
     this.fov = 45;
@@ -34,6 +39,12 @@ export default class SceneInit {
       1000
     );
     this.camera.position.z = 48;
+
+    this.mouse = new THREE.Vector2();
+    this.instersectionPoint = new THREE.Vector3();
+    this.planeNormal = new THREE.Vector3();
+    this.plane = new THREE.Plane();
+    this.raycaster = new THREE.Raycaster();
 
     // NOTE: Specify a canvas which is already created in the HTML.
     const canvas = document.getElementById('myThreeJsCanvas');
@@ -64,36 +75,49 @@ export default class SceneInit {
 
     // if window resizes
     window.addEventListener('resize', () => this.onWindowResize(), false);
-
-    // NOTE: Load space background.
-    // this.loader = new THREE.TextureLoader();
-    // this.scene.background = this.loader.load('./pics/space.jpeg');
-
-    // NOTE: Declare uniforms to pass into glsl shaders.
-    // this.uniforms = {
-    //   u_time: { type: 'f', value: 1.0 },
-    //   colorB: { type: 'vec3', value: new THREE.Color(0xfff000) },
-    //   colorA: { type: 'vec3', value: new THREE.Color(0xffffff) },
-    // };
   }
 
   animate() {
     // NOTE: Window is implied.
-    // requestAnimationFrame(this.animate.bind(this));
     window.requestAnimationFrame(this.animate.bind(this));
     this.render();
     this.stats.update();
     this.controls.update();
   }
 
+  hoverEvent (event, ref) {
+    ref.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    ref.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    ref.planeNormal.copy(ref.camera.position).normalize();
+    ref.plane.setFromNormalAndCoplanarPoint(
+      ref.planeNormal, 
+      ref.scene.position
+    )
+    
+    ref.raycaster.setFromCamera(ref.mouse, ref.camera)
+    ref.raycaster.ray.intersectPlane(ref.plane, ref.instersectionPoint)
+  }
+
+  clickEvent (event, ref) {
+    const sphereGeo = new THREE.SphereGeometry(0.3, 30, 30);
+    const sphereMat = new THREE.MeshStandardMaterial({
+      color: 0xFFEA00,
+      metalness: 0,
+      roughness: 0
+    })
+
+    const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
+    ref.scene.add(sphereMesh)
+    console.log(ref.instersectionPoint)
+    sphereMesh.position.copy(ref.instersectionPoint);
+  }
+
   render() {
     // NOTE: Update uniform data on each render.
-    // this.uniforms.u_time.value += this.clock.getDelta();
     this.renderer.render(this.scene, this.camera);
   }
 
   onWindowResize() {
-    console.log(window.innerWidth, 'windowResize')
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);

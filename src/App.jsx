@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 // import img from '/public/camisa_manga_gola.jpg'
 
 import * as THREE from 'three';
@@ -6,9 +6,15 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import SceneInit from './SceneInit'
 
-function App() {
+function App() { 
+  const [ points, setPoints ] = useState([])
+  const test = new SceneInit()
+
   useEffect(() => {
-    const test = new SceneInit()
+    
+  }, [points])
+
+  useEffect(() => {
     test.initialize();
     test.animate();
 
@@ -16,22 +22,25 @@ function App() {
     const gltfLoader = new GLTFLoader();
     gltfLoader.load('public/models/shiba/scene.gltf', (gltfScene) => {
       loadedModel = gltfScene;
-      console.log(loadedModel);
-
+      console.log(gltfScene)
       gltfScene.scene.rotation.y = Math.PI / 8;
       gltfScene.scene.position.y = 3;
       gltfScene.scene.scale.set(10, 10, 10);
       test.scene.add(gltfScene.scene);
+      window.addEventListener('mousemove', (event) => test.hoverEvent(event, test));
+      window.addEventListener('dblclick', (event) => test.clickEvent(event, test));
+      // window.addEventListener('mousemove', (event) => {
+      //   test.hoverEvent(event, test)
+      // });
+  
+      // window.addEventListener('dblclick', (event) => {
+      //   test.clickEvent(event, gltfScene)
+      //   // setPoints([
+      //   //   ...points,
+      //   //   test.mouse
+      //   // ])
+      // });
     })
-
-    const animate = () => {
-      if (loadedModel) {
-        loadedModel.scene.rotation.x += 0.01;
-        loadedModel.scene.rotation.y += 0.01;
-        loadedModel.scene.rotation.z += 0.01;
-      }
-      requestAnimationFrame(animate);
-    };
   }, [])
 
   return (
